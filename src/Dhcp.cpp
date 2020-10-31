@@ -5,6 +5,7 @@
 #include "Ethernet.h"
 #include "Dhcp.h"
 #include "utility/w5100.h"
+#include <avr/wdt.h>
 
 int DhcpClass::beginWithDHCP(uint8_t *mac, const char *hostname, unsigned long timeout, unsigned long responseTimeout)
 {
@@ -278,6 +279,9 @@ uint8_t DhcpClass::parseDHCPResponse(unsigned long responseTimeout, uint32_t &tr
       return 255;
     }
     delay(50);
+
+    // Reset hardware watchdog to prevent box resets during long DHCP handshakes
+    wdt_reset();
   }
   // start reading in the packet
   RIP_MSG_FIXED fixedMsg;

@@ -8,6 +8,7 @@
 #include "Ethernet.h"
 #include "Dns.h"
 #include "utility/w5100.h"
+#include <avr/wdt.h>
 
 #define SOCKET_NONE 255
 // Various flags and header field values for a DNS message
@@ -241,6 +242,9 @@ uint16_t DNSClient::ProcessResponse(uint16_t aTimeout, IPAddress &aAddress)
       return TIMED_OUT;
     }
     delay(50);
+
+    // Reset hardware watchdog to prevent box resets during long DHCP handshakes
+    wdt_reset();
   }
 
   // We've had a reply!
