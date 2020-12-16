@@ -39,7 +39,7 @@
 #endif
 
 #ifndef SERIAL_PORT
-#define SERIAL_PORT Serial3
+#define SERIAL_PORT Serial
 #endif
 
 // By default, each socket uses 2K buffers inside the Wiznet chip.  If
