@@ -86,26 +86,29 @@ uint8_t W5100Class::init(void)
   if (initialized)
     return 1;
 
-  // Many Ethernet shields have a CAT811 or similar reset chip
-  // connected to W5100 or W5200 chips.  The W5200 will not work at
-  // all, and may even drive its MISO pin, until given an active low
-  // reset pulse!  The CAT811 has a 240 ms typical pulse length, and
-  // a 400 ms worst case maximum pulse length.  MAX811 has a worst
-  // case maximum 560 ms pulse length.  This delay is meant to wait
-  // until the reset pulse is ended.  If your hardware has a shorter
-  // reset time, this can be edited or removed.
+// Many Ethernet shields have a CAT811 or similar reset chip
+// connected to W5100 or W5200 chips.  The W5200 will not work at
+// all, and may even drive its MISO pin, until given an active low
+// reset pulse!  The CAT811 has a 240 ms typical pulse length, and
+// a 400 ms worst case maximum pulse length.  MAX811 has a worst
+// case maximum 560 ms pulse length.  This delay is meant to wait
+// until the reset pulse is ended.  If your hardware has a shorter
+// reset time, this can be edited or removed.
+#ifndef REMOVE_W5100_W5200_SUPPORT
   delay(560);
-  //Serial3.println("w5100 init");
+#endif
+  //SERIAL_PORT.println("w5100 init");
 
   SPI.begin();
   initSS();
   resetSS();
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
 
-  // Attempt W5200 detection first, because W5200 does not properly
-  // reset its SPI state when CS goes high (inactive).  Communication
-  // from detecting the other chips can leave the W5200 in a state
-  // where it won't recover, unless given a reset pulse.
+// Attempt W5200 detection first, because W5200 does not properly
+// reset its SPI state when CS goes high (inactive).  Communication
+// from detecting the other chips can leave the W5200 in a state
+// where it won't recover, unless given a reset pulse.
+#ifndef REMOVE_W5100_W5200_SUPPORT
   if (isW5200())
   {
     CH_BASE_MSB = 0x40;
@@ -135,7 +138,9 @@ uint8_t W5100Class::init(void)
     // SPI well with this chip.  It appears to be very resilient,
     // so try it after the fragile W5200
   }
-  else if (isW5500())
+  else
+#endif
+      if (isW5500())
   {
     CH_BASE_MSB = 0x10;
 #ifdef ETHERNET_LARGE_BUFFERS
@@ -166,6 +171,7 @@ uint8_t W5100Class::init(void)
     // communication.  W5100 is also the only chip without a VERSIONR
     // register for identification, so we check this last.
   }
+#ifndef REMOVE_W5100_W5200_SUPPORT
   else if (isW5100())
   {
     CH_BASE_MSB = 0x04;
@@ -192,9 +198,10 @@ uint8_t W5100Class::init(void)
     // that's heard other SPI communication if its chip select
     // pin wasn't high when a SD card or other SPI chip was used.
   }
+#endif
   else
   {
-    //Serial3.println("no chip :-(");
+    //SERIAL_PORT.println("no chip :-(");
     chip = 0;
     SPI.endTransaction();
     return 0; // no known chip is responding :-(
@@ -209,15 +216,15 @@ uint8_t W5100Class::softReset(void)
 {
   uint16_t count = 0;
 
-  //Serial3.println("Wiznet soft reset");
+  //SERIAL_PORT.println("Wiznet soft reset");
   // write to reset bit
   writeMR(0x80);
   // then wait for soft reset to complete
   do
   {
     uint8_t mr = readMR();
-    //Serial3.print("mr=");
-    //Serial3.println(mr, HEX);
+    //SERIAL_PORT.print("mr=");
+    //SERIAL_PORT.println(mr, HEX);
     if (mr == 0)
       return 1;
     delay(1);
@@ -225,10 +232,11 @@ uint8_t W5100Class::softReset(void)
   return 0;
 }
 
+#ifndef REMOVE_W5100_W5200_SUPPORT
 uint8_t W5100Class::isW5100(void)
 {
   chip = 51;
-  //Serial3.println("w5100.cpp: detect W5100 chip");
+  //SERIAL_PORT.println("w5100.cpp: detect W5100 chip");
   if (!softReset())
     return 0;
   writeMR(0x10);
@@ -240,14 +248,14 @@ uint8_t W5100Class::isW5100(void)
   writeMR(0x00);
   if (readMR() != 0x00)
     return 0;
-  //Serial3.println("chip is W5100");
+  //SERIAL_PORT.println("chip is W5100");
   return 1;
 }
 
 uint8_t W5100Class::isW5200(void)
 {
   chip = 52;
-  //Serial3.println("w5100.cpp: detect W5200 chip");
+  //SERIAL_PORT.println("w5100.cpp: detect W5200 chip");
   if (!softReset())
     return 0;
   writeMR(0x08);
@@ -260,18 +268,19 @@ uint8_t W5100Class::isW5200(void)
   if (readMR() != 0x00)
     return 0;
   int ver = readVERSIONR_W5200();
-  //Serial3.print("version=");
-  //Serial3.println(ver);
+  //SERIAL_PORT.print("version=");
+  //SERIAL_PORT.println(ver);
   if (ver != 3)
     return 0;
-  //Serial3.println("chip is W5200");
+  //SERIAL_PORT.println("chip is W5200");
   return 1;
 }
+#endif
 
 uint8_t W5100Class::isW5500(void)
 {
   chip = 55;
-  //Serial3.println("w5100.cpp: detect W5500 chip");
+  //SERIAL_PORT.println("w5100.cpp: detect W5500 chip");
   if (!softReset())
     return 0;
   writeMR(0x08);
@@ -284,11 +293,11 @@ uint8_t W5100Class::isW5500(void)
   if (readMR() != 0x00)
     return 0;
   int ver = readVERSIONR_W5500();
-  //Serial3.print("version=");
-  //Serial3.println(ver);
+  //SERIAL_PORT.print("version=");
+  //SERIAL_PORT.println(ver);
   if (ver != 4)
     return 0;
-  //Serial3.println("chip is W5500");
+  //SERIAL_PORT.println("chip is W5500");
   return 1;
 }
 
@@ -300,6 +309,7 @@ W5100Linkstatus W5100Class::getLinkStatus()
     return UNKNOWN;
   switch (chip)
   {
+#ifndef REMOVE_W5100_W5200_SUPPORT
   case 52:
     SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
     phystatus = readPSTATUS_W5200();
@@ -307,6 +317,7 @@ W5100Linkstatus W5100Class::getLinkStatus()
     if (phystatus & 0x20)
       return LINK_ON;
     return LINK_OFF;
+#endif
   case 55:
     SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
     phystatus = readPHYCFGR_W5500();
@@ -322,7 +333,7 @@ W5100Linkstatus W5100Class::getLinkStatus()
 uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 {
   uint8_t cmd[8];
-
+#ifndef REMOVE_W5100_W5200_SUPPORT
   if (chip == 51)
   {
     for (uint16_t i = 0; i < len; i++)
@@ -357,6 +368,7 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
   }
   else
   { // chip == 55
+#endif
     setSS();
     if (addr < 0x100)
     {
@@ -381,11 +393,11 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 #if defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 1
       cmd[2] = 0x14; // 16K buffers
 #elif defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 2
-      cmd[2] = ((addr >> 8) & 0x20) | 0x14; // 8K buffers
+    cmd[2] = ((addr >> 8) & 0x20) | 0x14; // 8K buffers
 #elif defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 4
-      cmd[2] = ((addr >> 7) & 0x60) | 0x14; // 4K buffers
+    cmd[2] = ((addr >> 7) & 0x60) | 0x14; // 4K buffers
 #else
-      cmd[2] = ((addr >> 6) & 0xE0) | 0x14; // 2K buffers
+    cmd[2] = ((addr >> 6) & 0xE0) | 0x14; // 2K buffers
 #endif
     }
     else
@@ -396,11 +408,11 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 #if defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 1
       cmd[2] = 0x1C; // 16K buffers
 #elif defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 2
-      cmd[2] = ((addr >> 8) & 0x20) | 0x1C; // 8K buffers
+    cmd[2] = ((addr >> 8) & 0x20) | 0x1C; // 8K buffers
 #elif defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 4
-      cmd[2] = ((addr >> 7) & 0x60) | 0x1C; // 4K buffers
+    cmd[2] = ((addr >> 7) & 0x60) | 0x1C; // 4K buffers
 #else
-      cmd[2] = ((addr >> 6) & 0xE0) | 0x1C; // 2K buffers
+    cmd[2] = ((addr >> 6) & 0xE0) | 0x1C; // 2K buffers
 #endif
     }
     if (len <= 5)
@@ -417,22 +429,24 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 #ifdef SPI_HAS_TRANSFER_BUF
       SPI.transfer(buf, NULL, len);
 #else
-      // TODO: copy 8 bytes at a time to cmd[] and block transfer
-      for (uint16_t i = 0; i < len; i++)
-      {
-        SPI.transfer(buf[i]);
-      }
+    // TODO: copy 8 bytes at a time to cmd[] and block transfer
+    for (uint16_t i = 0; i < len; i++)
+    {
+      SPI.transfer(buf[i]);
+    }
 #endif
     }
     resetSS();
+#ifndef REMOVE_W5100_W5200_SUPPORT
   }
+#endif
   return len;
 }
 
 uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 {
   uint8_t cmd[4];
-
+#ifndef REMOVE_W5100_W5200_SUPPORT
   if (chip == 51)
   {
     for (uint16_t i = 0; i < len; i++)
@@ -470,6 +484,7 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
   }
   else
   { // chip == 55
+#endif
     setSS();
     if (addr < 0x100)
     {
@@ -494,11 +509,11 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 #if defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 1
       cmd[2] = 0x10; // 16K buffers
 #elif defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 2
-      cmd[2] = ((addr >> 8) & 0x20) | 0x10; // 8K buffers
+    cmd[2] = ((addr >> 8) & 0x20) | 0x10; // 8K buffers
 #elif defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 4
-      cmd[2] = ((addr >> 7) & 0x60) | 0x10; // 4K buffers
+    cmd[2] = ((addr >> 7) & 0x60) | 0x10; // 4K buffers
 #else
-      cmd[2] = ((addr >> 6) & 0xE0) | 0x10; // 2K buffers
+    cmd[2] = ((addr >> 6) & 0xE0) | 0x10; // 2K buffers
 #endif
     }
     else
@@ -509,18 +524,20 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 #if defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 1
       cmd[2] = 0x18; // 16K buffers
 #elif defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 2
-      cmd[2] = ((addr >> 8) & 0x20) | 0x18; // 8K buffers
+    cmd[2] = ((addr >> 8) & 0x20) | 0x18; // 8K buffers
 #elif defined(ETHERNET_LARGE_BUFFERS) && MAX_SOCK_NUM <= 4
-      cmd[2] = ((addr >> 7) & 0x60) | 0x18; // 4K buffers
+    cmd[2] = ((addr >> 7) & 0x60) | 0x18; // 4K buffers
 #else
-      cmd[2] = ((addr >> 6) & 0xE0) | 0x18; // 2K buffers
+    cmd[2] = ((addr >> 6) & 0xE0) | 0x18; // 2K buffers
 #endif
     }
     SPI.transfer(cmd, 3);
     memset(buf, 0, len);
     SPI.transfer(buf, len);
     resetSS();
+#ifndef REMOVE_W5100_W5200_SUPPORT
   }
+#endif
   return len;
 }
 

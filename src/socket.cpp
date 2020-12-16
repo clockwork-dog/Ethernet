@@ -54,7 +54,7 @@ void EthernetClass::socketPortRand(uint16_t n)
 {
   n &= 0x3FFF;
   local_port ^= n;
-  //Serial3.printf("socketPortRand %d, srcport=%d\n", n, local_port);
+  //SERIAL_PORT.printf("socketPortRand %d, srcport=%d\n", n, local_port);
 }
 
 uint8_t EthernetClass::socketBegin(uint8_t protocol, uint16_t port)
@@ -69,7 +69,7 @@ uint8_t EthernetClass::socketBegin(uint8_t protocol, uint16_t port)
   if (chip == 51)
     maxindex = 4; // W5100 chip never supports more than 4 sockets
 #endif
-  //Serial3.printf("W5000socket begin, protocol=%d, port=%d\n", protocol, port);
+  //SERIAL_PORT.printf("W5000socket begin, protocol=%d, port=%d\n", protocol, port);
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
   // look at all the hardware sockets, use any that are closed (unused)
   for (s = 0; s < maxindex; s++)
@@ -78,7 +78,7 @@ uint8_t EthernetClass::socketBegin(uint8_t protocol, uint16_t port)
     if (status[s] == SnSR::CLOSED)
       goto makesocket;
   }
-  //Serial3.printf("W5000socket step2\n");
+  //SERIAL_PORT.printf("W5000socket step2\n");
   // as a last resort, forcibly close any already closing
   for (s = 0; s < maxindex; s++)
   {
@@ -93,7 +93,7 @@ uint8_t EthernetClass::socketBegin(uint8_t protocol, uint16_t port)
       goto closemakesocket;
   }
 #if 0
-	Serial3.printf("W5000socket step3\n");
+	SERIAL_PORT.printf("W5000socket step3\n");
 	// next, use any that are effectively closed
 	for (s=0; s < MAX_SOCK_NUM; s++) {
 		uint8_t stat = status[s];
@@ -104,10 +104,10 @@ uint8_t EthernetClass::socketBegin(uint8_t protocol, uint16_t port)
   SPI.endTransaction();
   return MAX_SOCK_NUM; // all sockets are in use
 closemakesocket:
-  //Serial3.printf("W5000socket close\n");
+  //SERIAL_PORT.printf("W5000socket close\n");
   W5100.execCmdSn(s, Sock_CLOSE);
 makesocket:
-  //Serial3.printf("W5000socket %d\n", s);
+  //SERIAL_PORT.printf("W5000socket %d\n", s);
   EthernetServer::server_port[s] = 0;
   delayMicroseconds(250); // TODO: is this needed??
   W5100.writeSnMR(s, protocol);
@@ -128,7 +128,7 @@ makesocket:
   state[s].RX_RD = W5100.readSnRX_RD(s); // always zero?
   state[s].RX_inc = 0;
   state[s].TX_FSR = 0;
-  //Serial3.printf("W5000socket prot=%d, RX_RD=%d\n", W5100.readSnMR(s), state[s].RX_RD);
+  //SERIAL_PORT.printf("W5000socket prot=%d, RX_RD=%d\n", W5100.readSnMR(s), state[s].RX_RD);
   SPI.endTransaction();
   return s;
 }
@@ -147,7 +147,7 @@ uint8_t EthernetClass::socketBeginMulticast(uint8_t protocol, IPAddress ip, uint
   if (chip == 51)
     maxindex = 4; // W5100 chip never supports more than 4 sockets
 #endif
-  //Serial3.printf("W5000socket begin, protocol=%d, port=%d\n", protocol, port);
+  //SERIAL_PORT.printf("W5000socket begin, protocol=%d, port=%d\n", protocol, port);
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
   // look at all the hardware sockets, use any that are closed (unused)
   for (s = 0; s < maxindex; s++)
@@ -156,7 +156,7 @@ uint8_t EthernetClass::socketBeginMulticast(uint8_t protocol, IPAddress ip, uint
     if (status[s] == SnSR::CLOSED)
       goto makesocket;
   }
-  //Serial3.printf("W5000socket step2\n");
+  //SERIAL_PORT.printf("W5000socket step2\n");
   // as a last resort, forcibly close any already closing
   for (s = 0; s < maxindex; s++)
   {
@@ -171,7 +171,7 @@ uint8_t EthernetClass::socketBeginMulticast(uint8_t protocol, IPAddress ip, uint
       goto closemakesocket;
   }
 #if 0
-	Serial3.printf("W5000socket step3\n");
+	SERIAL_PORT.printf("W5000socket step3\n");
 	// next, use any that are effectively closed
 	for (s=0; s < MAX_SOCK_NUM; s++) {
 		uint8_t stat = status[s];
@@ -182,10 +182,10 @@ uint8_t EthernetClass::socketBeginMulticast(uint8_t protocol, IPAddress ip, uint
   SPI.endTransaction();
   return MAX_SOCK_NUM; // all sockets are in use
 closemakesocket:
-  //Serial3.printf("W5000socket close\n");
+  //SERIAL_PORT.printf("W5000socket close\n");
   W5100.execCmdSn(s, Sock_CLOSE);
 makesocket:
-  //Serial3.printf("W5000socket %d\n", s);
+  //SERIAL_PORT.printf("W5000socket %d\n", s);
   EthernetServer::server_port[s] = 0;
   delayMicroseconds(250); // TODO: is this needed??
   W5100.writeSnMR(s, protocol);
@@ -214,7 +214,7 @@ makesocket:
   state[s].RX_RD = W5100.readSnRX_RD(s); // always zero?
   state[s].RX_inc = 0;
   state[s].TX_FSR = 0;
-  //Serial3.printf("W5000socket prot=%d, RX_RD=%d\n", W5100.readSnMR(s), state[s].RX_RD);
+  //SERIAL_PORT.printf("W5000socket prot=%d, RX_RD=%d\n", W5100.readSnMR(s), state[s].RX_RD);
   SPI.endTransaction();
   return s;
 #else
@@ -308,7 +308,7 @@ static void read_data(uint8_t s, uint16_t src, uint8_t *dst, uint16_t len)
   uint16_t src_mask;
   uint16_t src_ptr;
 
-  //Serial3.printf("read_data, len=%d, at:%d\n", len, src);
+  //SERIAL_PORT.printf("read_data, len=%d, at:%d\n", len, src);
   src_mask = (uint16_t)src & W5100.SMASK;
   src_ptr = W5100.RBASE(s) + src_mask;
 
@@ -337,7 +337,7 @@ int EthernetClass::socketRecv(uint8_t s, uint8_t *buf, int16_t len)
     uint16_t rsr = getSnRX_RSR(s);
     ret = rsr - state[s].RX_inc;
     state[s].RX_RSR = ret;
-    //Serial3.printf("Sock_RECV, RX_RSR=%d, RX_inc=%d\n", ret, state[s].RX_inc);
+    //SERIAL_PORT.printf("Sock_RECV, RX_RSR=%d, RX_inc=%d\n", ret, state[s].RX_inc);
   }
   if (ret == 0)
   {
@@ -372,7 +372,7 @@ int EthernetClass::socketRecv(uint8_t s, uint8_t *buf, int16_t len)
       state[s].RX_inc = 0;
       W5100.writeSnRX_RD(s, ptr);
       W5100.execCmdSn(s, Sock_RECV);
-      //Serial3.printf("Sock_RECV cmd, RX_RD=%d, RX_RSR=%d\n",
+      //SERIAL_PORT.printf("Sock_RECV cmd, RX_RD=%d, RX_RSR=%d\n",
       //  state[s].RX_RD, state[s].RX_RSR);
     }
     else
@@ -381,7 +381,7 @@ int EthernetClass::socketRecv(uint8_t s, uint8_t *buf, int16_t len)
     }
   }
   SPI.endTransaction();
-  //Serial3.printf("socketRecv, ret=%d\n", ret);
+  //SERIAL_PORT.printf("socketRecv, ret=%d\n", ret);
   return ret;
 }
 
@@ -395,7 +395,7 @@ uint16_t EthernetClass::socketRecvAvailable(uint8_t s)
     SPI.endTransaction();
     ret = rsr - state[s].RX_inc;
     state[s].RX_RSR = ret;
-    //Serial3.printf("sockRecvAvailable s=%d, RX_RSR=%d\n", s, ret);
+    //SERIAL_PORT.printf("sockRecvAvailable s=%d, RX_RSR=%d\n", s, ret);
   }
   return ret;
 }
@@ -530,7 +530,7 @@ uint16_t EthernetClass::socketSendAvailable(uint8_t s)
 
 uint16_t EthernetClass::socketBufferData(uint8_t s, uint16_t offset, const uint8_t *buf, uint16_t len)
 {
-  //Serial3.printf("  bufferData, offset=%d, len=%d\n", offset, len);
+  //SERIAL_PORT.printf("  bufferData, offset=%d, len=%d\n", offset, len);
   uint16_t ret = 0;
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
   uint16_t txfree = getSnTX_FSR(s);
@@ -574,7 +574,7 @@ bool EthernetClass::socketSendUDP(uint8_t s)
       /* +2008.01 [bj]: clear interrupt */
       W5100.writeSnIR(s, (SnIR::SEND_OK | SnIR::TIMEOUT));
       SPI.endTransaction();
-      //Serial3.printf("sendUDP timeout\n");
+      //SERIAL_PORT.printf("sendUDP timeout\n");
       return false;
     }
     SPI.endTransaction();
@@ -586,7 +586,7 @@ bool EthernetClass::socketSendUDP(uint8_t s)
   W5100.writeSnIR(s, SnIR::SEND_OK);
   SPI.endTransaction();
 
-  //Serial3.printf("sendUDP ok\n");
+  //SERIAL_PORT.printf("sendUDP ok\n");
   /* Sent ok */
   return true;
 }
