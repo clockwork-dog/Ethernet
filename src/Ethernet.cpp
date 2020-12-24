@@ -127,10 +127,12 @@ EthernetHardwareStatus EthernetClass::hardwareStatus()
 {
   switch (W5100.getChip())
   {
+#ifndef REMOVE_W5100_W5200_SUPPORT
   case 51:
     return EthernetW5100;
   case 52:
     return EthernetW5200;
+#endif
   case 55:
     return EthernetW5500;
   default:

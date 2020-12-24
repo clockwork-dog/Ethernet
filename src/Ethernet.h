@@ -66,8 +66,10 @@ enum EthernetLinkStatus
 enum EthernetHardwareStatus
 {
   EthernetNoHardware,
+#ifndef REMOVE_W5100_W5200_SUPPORT
   EthernetW5100,
   EthernetW5200,
+#endif
   EthernetW5500
 };
 

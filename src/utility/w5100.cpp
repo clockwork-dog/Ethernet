@@ -97,7 +97,10 @@ uint8_t W5100Class::init(void)
 #ifndef REMOVE_W5100_W5200_SUPPORT
   delay(560);
 #endif
-  //SERIAL_PORT.println("w5100 init");
+
+#ifdef DEBUG
+  SERIAL_PORT.println("w5100 init");
+#endif
 
   SPI.begin();
   initSS();
@@ -201,7 +204,9 @@ uint8_t W5100Class::init(void)
 #endif
   else
   {
-    //SERIAL_PORT.println("no chip :-(");
+#ifdef DEBUG
+    SERIAL_PORT.println("no chip :-(");
+#endif
     chip = 0;
     SPI.endTransaction();
     return 0; // no known chip is responding :-(
@@ -215,16 +220,19 @@ uint8_t W5100Class::init(void)
 uint8_t W5100Class::softReset(void)
 {
   uint16_t count = 0;
-
-  //SERIAL_PORT.println("Wiznet soft reset");
+#ifdef DEBUG
+  SERIAL_PORT.println("Wiznet soft reset");
+#endif
   // write to reset bit
   writeMR(0x80);
   // then wait for soft reset to complete
   do
   {
     uint8_t mr = readMR();
-    //SERIAL_PORT.print("mr=");
-    //SERIAL_PORT.println(mr, HEX);
+#ifdef DEBUG
+    SERIAL_PORT.print("mr=");
+    SERIAL_PORT.println(mr, HEX);
+#endif
     if (mr == 0)
       return 1;
     delay(1);
@@ -236,7 +244,9 @@ uint8_t W5100Class::softReset(void)
 uint8_t W5100Class::isW5100(void)
 {
   chip = 51;
-  //SERIAL_PORT.println("w5100.cpp: detect W5100 chip");
+#ifdef DEBUG
+  SERIAL_PORT.println("w5100.cpp: detect W5100 chip");
+#endif
   if (!softReset())
     return 0;
   writeMR(0x10);
@@ -248,14 +258,18 @@ uint8_t W5100Class::isW5100(void)
   writeMR(0x00);
   if (readMR() != 0x00)
     return 0;
-  //SERIAL_PORT.println("chip is W5100");
+#ifdef DEBUG
+  SERIAL_PORT.println("chip is W5100");
+#endif
   return 1;
 }
 
 uint8_t W5100Class::isW5200(void)
 {
   chip = 52;
-  //SERIAL_PORT.println("w5100.cpp: detect W5200 chip");
+#ifdef DEBUG
+  SERIAL_PORT.println("w5100.cpp: detect W5200 chip");
+#endif
   if (!softReset())
     return 0;
   writeMR(0x08);
@@ -268,11 +282,15 @@ uint8_t W5100Class::isW5200(void)
   if (readMR() != 0x00)
     return 0;
   int ver = readVERSIONR_W5200();
-  //SERIAL_PORT.print("version=");
-  //SERIAL_PORT.println(ver);
+#ifdef DEBUG
+  SERIAL_PORT.print("version=");
+  SERIAL_PORT.println(ver);
+#endif
   if (ver != 3)
     return 0;
-  //SERIAL_PORT.println("chip is W5200");
+#ifdef DEBUG
+  SERIAL_PORT.println("chip is W5200");
+#endif
   return 1;
 }
 #endif
@@ -280,7 +298,9 @@ uint8_t W5100Class::isW5200(void)
 uint8_t W5100Class::isW5500(void)
 {
   chip = 55;
-  //SERIAL_PORT.println("w5100.cpp: detect W5500 chip");
+  #ifdef DEBUG
+  SERIAL_PORT.println("w5100.cpp: detect W5500 chip");
+  #endif
   if (!softReset())
     return 0;
   writeMR(0x08);
@@ -293,11 +313,15 @@ uint8_t W5100Class::isW5500(void)
   if (readMR() != 0x00)
     return 0;
   int ver = readVERSIONR_W5500();
-  //SERIAL_PORT.print("version=");
-  //SERIAL_PORT.println(ver);
+  #ifdef DEBUG
+  SERIAL_PORT.print("version=");
+  SERIAL_PORT.println(ver);
+  #endif
   if (ver != 4)
     return 0;
-  //SERIAL_PORT.println("chip is W5500");
+    #ifdef DEBUG
+  SERIAL_PORT.println("chip is W5500");
+  #endif
   return 1;
 }
 
