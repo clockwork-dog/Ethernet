@@ -108,6 +108,11 @@ void EthernetClass::init(uint8_t sspin)
   W5100.setSS(sspin);
 }
 
+void EthernetClass::powerDown()
+{
+  W5100.powerDown();
+}
+
 EthernetLinkStatus EthernetClass::linkStatus()
 {
   switch (W5100.getLinkStatus())

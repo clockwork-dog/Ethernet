@@ -131,6 +131,7 @@ class W5100Class
 
 public:
   static uint8_t init(void);
+  static uint8_t powerDown(void);
 
   inline void setGatewayIp(const uint8_t *addr) { writeGAR(addr); }
   inline void getGatewayIp(uint8_t *addr) { readGAR(addr); }
@@ -223,8 +224,10 @@ public:
   __GP_REGISTER8(VERSIONR_W5200, 0x001F); // Chip Version Register (W5200 only)
 #endif
   __GP_REGISTER8(VERSIONR_W5500, 0x0039); // Chip Version Register (W5500 only)
-  __GP_REGISTER8(PSTATUS_W5200, 0x0035);  // PHY Status
-  __GP_REGISTER8(PHYCFGR_W5500, 0x002E);  // PHY Configuration register, default: 10111xxx
+#ifndef REMOVE_W5100_W5200_SUPPORT
+  __GP_REGISTER8(PSTATUS_W5200, 0x0035); // PHY Status
+#endif
+  __GP_REGISTER8(PHYCFGR_W5500, 0x002E); // PHY Configuration register, default: 10111xxx
 
 #undef __GP_REGISTER8
 #undef __GP_REGISTER16

@@ -240,6 +240,44 @@ uint8_t W5100Class::softReset(void)
   return 0;
 }
 
+// Power down the W5500
+uint8_t W5100Class::powerDown(void)
+{
+  if (!init())
+    return 0;
+  uint16_t count = 0;
+#ifdef DEBUG
+  SERIAL_PORT.println("Wiznet power down");
+#endif
+  // Write to power down
+  SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
+  writePHYCFGR_W5500(0b11110111);
+  // Reset PHY
+  writePHYCFGR_W5500(0b01110111);
+  delay(50);
+  // then wait for power down to complete
+  do
+  {
+    uint8_t phycfgr = readPHYCFGR_W5500();
+
+    if ((phycfgr & 0b01110000) == 0b01110000 && (phycfgr & 0b00001000) == 0b00000000)
+    {
+#ifdef DEBUG
+      SERIAL_PORT.println("Power down successful");
+#endif
+      SPI.endTransaction();
+      return 1;
+    }
+#ifdef DEBUG
+    SERIAL_PORT.print("Power down failed. phycfgr = ");
+    SERIAL_PORT.println(phycfgr);
+#endif
+    delay(1);
+  } while (++count < 20);
+  SPI.endTransaction();
+  return 0;
+}
+
 #ifndef REMOVE_W5100_W5200_SUPPORT
 uint8_t W5100Class::isW5100(void)
 {
@@ -298,9 +336,9 @@ uint8_t W5100Class::isW5200(void)
 uint8_t W5100Class::isW5500(void)
 {
   chip = 55;
-  #ifdef DEBUG
+#ifdef DEBUG
   SERIAL_PORT.println("w5100.cpp: detect W5500 chip");
-  #endif
+#endif
   if (!softReset())
     return 0;
   writeMR(0x08);
@@ -313,15 +351,15 @@ uint8_t W5100Class::isW5500(void)
   if (readMR() != 0x00)
     return 0;
   int ver = readVERSIONR_W5500();
-  #ifdef DEBUG
+#ifdef DEBUG
   SERIAL_PORT.print("version=");
   SERIAL_PORT.println(ver);
-  #endif
+#endif
   if (ver != 4)
     return 0;
-    #ifdef DEBUG
+#ifdef DEBUG
   SERIAL_PORT.println("chip is W5500");
-  #endif
+#endif
   return 1;
 }
 
