@@ -157,7 +157,7 @@ void DhcpClass::send_DHCP_MESSAGE(uint8_t messageType, uint16_t secondsElapsed)
 
   if (_dhcpUdpSocket.beginPacket(dest_addr, DHCP_SERVER_PORT) == -1)
   {
-    //SERIAL_PORT.printf("DHCP transmit error\n");
+    //SERIAL_PORT.println("DHCP transmit error");
     // FIXME Need to return errors
     return;
   }
