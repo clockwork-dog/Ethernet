@@ -205,7 +205,7 @@ uint8_t W5100Class::init(void)
   else
   {
 #ifdef DEBUG
-    SERIAL_PORT.println("no chip :-(");
+    SERIAL_PORT.println("No chip");
 #endif
     chip = 0;
     SPI.endTransaction();
@@ -221,7 +221,7 @@ uint8_t W5100Class::softReset(void)
 {
   uint16_t count = 0;
 #ifdef DEBUG
-  SERIAL_PORT.println("Wiznet soft reset");
+  SERIAL_PORT.println("Wiz soft reset");
 #endif
   // write to reset bit
   writeMR(0x80);
@@ -247,7 +247,7 @@ uint8_t W5100Class::powerDown(void)
     return 0;
   uint16_t count = 0;
 #ifdef DEBUG
-  SERIAL_PORT.println("Wiznet power down");
+  SERIAL_PORT.println("Wiz power down");
 #endif
   // Write to power down
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
@@ -263,13 +263,13 @@ uint8_t W5100Class::powerDown(void)
     if ((phycfgr & 0b01110000) == 0b01110000 && (phycfgr & 0b00001000) == 0b00000000)
     {
 #ifdef DEBUG
-      SERIAL_PORT.println("Power down successful");
+      SERIAL_PORT.println("Wiz PD success");
 #endif
       SPI.endTransaction();
       return 1;
     }
 #ifdef DEBUG
-    SERIAL_PORT.print("Power down failed. phycfgr = ");
+    SERIAL_PORT.print("Wiz PD fail. phycfgr: ");
     SERIAL_PORT.println(phycfgr);
 #endif
     delay(1);
@@ -283,7 +283,7 @@ uint8_t W5100Class::isW5100(void)
 {
   chip = 51;
 #ifdef DEBUG
-  SERIAL_PORT.println("w5100.cpp: detect W5100 chip");
+  SERIAL_PORT.println("Detect W5100 chip");
 #endif
   if (!softReset())
     return 0;
@@ -297,7 +297,7 @@ uint8_t W5100Class::isW5100(void)
   if (readMR() != 0x00)
     return 0;
 #ifdef DEBUG
-  SERIAL_PORT.println("chip is W5100");
+  SERIAL_PORT.println("Chip: W5100");
 #endif
   return 1;
 }
@@ -306,7 +306,7 @@ uint8_t W5100Class::isW5200(void)
 {
   chip = 52;
 #ifdef DEBUG
-  SERIAL_PORT.println("w5100.cpp: detect W5200 chip");
+  SERIAL_PORT.println("Detect W5200 chip");
 #endif
   if (!softReset())
     return 0;
@@ -321,13 +321,13 @@ uint8_t W5100Class::isW5200(void)
     return 0;
   int ver = readVERSIONR_W5200();
 #ifdef DEBUG
-  SERIAL_PORT.print("version=");
+  SERIAL_PORT.print("Version=");
   SERIAL_PORT.println(ver);
 #endif
   if (ver != 3)
     return 0;
 #ifdef DEBUG
-  SERIAL_PORT.println("chip is W5200");
+  SERIAL_PORT.println("Chip: W5200");
 #endif
   return 1;
 }
@@ -337,7 +337,7 @@ uint8_t W5100Class::isW5500(void)
 {
   chip = 55;
 #ifdef DEBUG
-  SERIAL_PORT.println("w5100.cpp: detect W5500 chip");
+  SERIAL_PORT.println("Detect W5500 chip");
 #endif
   if (!softReset())
     return 0;
@@ -352,13 +352,13 @@ uint8_t W5100Class::isW5500(void)
     return 0;
   int ver = readVERSIONR_W5500();
 #ifdef DEBUG
-  SERIAL_PORT.print("version=");
+  SERIAL_PORT.print("Version=");
   SERIAL_PORT.println(ver);
 #endif
   if (ver != 4)
     return 0;
 #ifdef DEBUG
-  SERIAL_PORT.println("chip is W5500");
+  SERIAL_PORT.println("Chip: W5500");
 #endif
   return 1;
 }
