@@ -26,7 +26,7 @@
 IPAddress EthernetClass::_dnsServerAddress;
 DhcpClass *EthernetClass::_dhcp = NULL;
 
-int EthernetClass::begin(uint8_t *mac, const char *hostname, unsigned long timeout, unsigned long responseTimeout)
+int EthernetClass::begin(uint8_t *mac, const char *hostname = nullptr, unsigned long timeout = 60000, unsigned long responseTimeout = 4000, ProcessEventsCallback eventsCallback = nullptr)
 {
   static DhcpClass s_dhcp;
   _dhcp = &s_dhcp;
@@ -40,7 +40,7 @@ int EthernetClass::begin(uint8_t *mac, const char *hostname, unsigned long timeo
   SPI.endTransaction();
 
   // Now try to get our config info from a DHCP server
-  int ret = _dhcp->beginWithDHCP(mac, hostname, timeout, responseTimeout);
+  int ret = _dhcp->beginWithDHCP(mac, hostname, timeout, responseTimeout, eventsCallback);
   if (ret == 1)
   {
     // We've successfully found a DHCP server and got our configuration

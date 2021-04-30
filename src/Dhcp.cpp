@@ -7,13 +7,14 @@
 #include "utility/w5100.h"
 #include <avr/wdt.h>
 
-int DhcpClass::beginWithDHCP(uint8_t *mac, const char *hostname, unsigned long timeout, unsigned long responseTimeout)
+int DhcpClass::beginWithDHCP(uint8_t *mac, const char *hostname = nullptr, unsigned long timeout = 60000, unsigned long responseTimeout = 4000, ProcessEventsCallback eventsCallback = nullptr)
 {
   _dhcpLeaseTime = 0;
   _dhcpT1 = 0;
   _dhcpT2 = 0;
   _timeout = timeout;
   _responseTimeout = responseTimeout;
+  _onProcessEvents = eventsCallback;
 
   // zero out _dhcpMacAddr
   memset(_dhcpMacAddr, 0, 6);
@@ -135,6 +136,18 @@ int DhcpClass::request_DHCP_lease()
 
     if (result != 1 && ((millis() - startTime) > _timeout))
       break;
+    // Very little time is spent waiting here, nevertheless we should check if the ethernet cable has been unplugged in the meantime
+    // and either process events using the function passed in (if there was one) or reset the watchdog timer
+    if (Ethernet.linkStatus() == LinkOFF)
+      break;
+    if (_onProcessEvents)
+    {
+      _onProcessEvents();
+    }
+    else
+    {
+      wdt_reset();
+    }
   }
 
   // We're done with the socket now
@@ -278,10 +291,23 @@ uint8_t DhcpClass::parseDHCPResponse(unsigned long responseTimeout, uint32_t &tr
     {
       return 255;
     }
-    delay(50);
-
-    // Reset hardware watchdog to prevent box resets during long DHCP handshakes
-    wdt_reset();
+    // This is where the bulk of the waiting happens
+    // Check cable isn't unplugged
+    if (Ethernet.linkStatus() == LinkOFF)
+    {
+      return 255;
+    }
+    // If we've been passed a processEvents function, call it
+    if (_onProcessEvents)
+    {
+      _onProcessEvents();
+    }
+    else // Otherwise just hang out and
+    {
+      delay(50);
+      // Reset hardware watchdog to prevent box resets during long DHCP handshakes
+      wdt_reset();
+    }
   }
   // start reading in the packet
   RIP_MSG_FIXED fixedMsg;

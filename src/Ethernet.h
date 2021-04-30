@@ -78,6 +78,7 @@ class EthernetClient;
 class EthernetServer;
 class DhcpClass;
 
+typedef void (*ProcessEventsCallback)();
 class EthernetClass
 {
 private:
@@ -88,7 +89,7 @@ public:
   // Initialise the Ethernet shield to use the provided MAC address and
   // gain the rest of the configuration through DHCP.
   // Returns 0 if the DHCP configuration failed, and 1 if it succeeded
-  static int begin(uint8_t *mac, const char *hostname = nullptr, unsigned long timeout = 60000, unsigned long responseTimeout = 4000);
+  static int begin(uint8_t *mac, const char *hostname = nullptr, unsigned long timeout = 60000, unsigned long responseTimeout = 4000, ProcessEventsCallback eventsCallback = nullptr);
   static int maintain();
   static EthernetLinkStatus linkStatus();
   static EthernetHardwareStatus hardwareStatus();
@@ -316,6 +317,7 @@ private:
   void printByte(char *, uint8_t);
 
   uint8_t parseDHCPResponse(unsigned long responseTimeout, uint32_t &transactionId);
+  ProcessEventsCallback _onProcessEvents;
 
 public:
   IPAddress getLocalIp();
@@ -324,7 +326,7 @@ public:
   IPAddress getDhcpServerIp();
   IPAddress getDnsServerIp();
 
-  int beginWithDHCP(uint8_t *, const char * = nullptr, unsigned long timeout = 60000, unsigned long responseTimeout = 4000);
+  int beginWithDHCP(uint8_t *, const char * = nullptr, unsigned long timeout = 60000, unsigned long responseTimeout = 4000, ProcessEventsCallback eventsCallback = nullptr);
   int checkLease();
 };
 
