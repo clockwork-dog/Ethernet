@@ -5,9 +5,13 @@
 #include "Ethernet.h"
 #include "Dhcp.h"
 #include "utility/w5100.h"
+#ifndef STM32BUILD
 #include <avr/wdt.h>
+#else
+#include <IWatchdog.h>
+#endif
 
-int DhcpClass::beginWithDHCP(uint8_t *mac, const char *hostname = nullptr, unsigned long timeout = 60000, unsigned long responseTimeout = 4000, ProcessEventsCallback eventsCallback = nullptr)
+int DhcpClass::beginWithDHCP(uint8_t *mac, const char *hostname, unsigned long timeout, unsigned long responseTimeout, ProcessEventsCallback eventsCallback)
 {
   _dhcpLeaseTime = 0;
   _dhcpT1 = 0;
@@ -46,7 +50,7 @@ void DhcpClass::reset_DHCP_lease()
   memset(_dhcpLocalIp, 0, 20);
 }
 
-//return:0 on error, 1 if request is sent and response is received
+// return:0 on error, 1 if request is sent and response is received
 int DhcpClass::request_DHCP_lease()
 {
   uint8_t messageType = 0;
@@ -103,7 +107,7 @@ int DhcpClass::request_DHCP_lease()
       {
         _dhcp_state = STATE_DHCP_LEASED;
         result = 1;
-        //use default lease time if we didn't get it
+        // use default lease time if we didn't get it
         if (_dhcpLeaseTime == 0)
         {
           _dhcpLeaseTime = DEFAULT_LEASE;
@@ -146,7 +150,11 @@ int DhcpClass::request_DHCP_lease()
     }
     else
     {
+#ifndef STM32BUILD
       wdt_reset();
+#else
+      IWatchdog.reload();
+#endif
     }
   }
 
@@ -170,8 +178,8 @@ void DhcpClass::send_DHCP_MESSAGE(uint8_t messageType, uint16_t secondsElapsed)
 
   if (_dhcpUdpSocket.beginPacket(dest_addr, DHCP_SERVER_PORT) == -1)
   {
-    //SERIAL_PORT.println("DHCP transmit error");
-    // FIXME Need to return errors
+    // SERIAL_PORT.println("DHCP transmit error");
+    //  FIXME Need to return errors
     return;
   }
 
@@ -197,14 +205,14 @@ void DhcpClass::send_DHCP_MESSAGE(uint8_t messageType, uint16_t secondsElapsed)
   // siaddr: already zeroed
   // giaddr: already zeroed
 
-  //put data in W5100 transmit buffer
+  // put data in W5100 transmit buffer
   _dhcpUdpSocket.write(buffer, 28);
 
   memset(buffer, 0, 32); // clear local buffer
 
   memcpy(buffer, _dhcpMacAddr, 6); // chaddr
 
-  //put data in W5100 transmit buffer
+  // put data in W5100 transmit buffer
   _dhcpUdpSocket.write(buffer, 16);
 
   memset(buffer, 0, 32); // clear local buffer
@@ -226,7 +234,7 @@ void DhcpClass::send_DHCP_MESSAGE(uint8_t messageType, uint16_t secondsElapsed)
   // OPT - message type
   buffer[4] = dhcpMessageType;
   buffer[5] = 0x01;
-  buffer[6] = messageType; //DHCP_REQUEST;
+  buffer[6] = messageType; // DHCP_REQUEST;
 
   // OPT - client identifier
   buffer[7] = dhcpClientIdentifier;
@@ -239,7 +247,7 @@ void DhcpClass::send_DHCP_MESSAGE(uint8_t messageType, uint16_t secondsElapsed)
   buffer[17] = strlen(_dhcpHostname); // length of hostname
   strlcpy((char *)&(buffer[18]), _dhcpHostname, strlen(_dhcpHostname) + 1);
 
-  //put data in W5100 transmit buffer
+  // put data in W5100 transmit buffer
   _dhcpUdpSocket.write(buffer, 18 + strlen(_dhcpHostname));
 
   if (messageType == DHCP_REQUEST)
@@ -258,7 +266,7 @@ void DhcpClass::send_DHCP_MESSAGE(uint8_t messageType, uint16_t secondsElapsed)
     buffer[10] = _dhcpDhcpServerIp[2];
     buffer[11] = _dhcpDhcpServerIp[3];
 
-    //put data in W5100 transmit buffer
+    // put data in W5100 transmit buffer
     _dhcpUdpSocket.write(buffer, 12);
   }
 
@@ -272,7 +280,7 @@ void DhcpClass::send_DHCP_MESSAGE(uint8_t messageType, uint16_t secondsElapsed)
   buffer[7] = dhcpT2value;
   buffer[8] = endOption;
 
-  //put data in W5100 transmit buffer
+  // put data in W5100 transmit buffer
   _dhcpUdpSocket.write(buffer, 9);
 
   _dhcpUdpSocket.endPacket();
@@ -306,7 +314,11 @@ uint8_t DhcpClass::parseDHCPResponse(unsigned long responseTimeout, uint32_t &tr
     {
       delay(50);
       // Reset hardware watchdog to prevent box resets during long DHCP handshakes
+#ifndef STM32BUILD
       wdt_reset();
+#else
+      IWatchdog.reload();
+#endif
     }
   }
   // start reading in the packet
