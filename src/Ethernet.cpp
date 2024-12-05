@@ -26,7 +26,7 @@
 IPAddress EthernetClass::_dnsServerAddress;
 DhcpClass *EthernetClass::_dhcp = NULL;
 
-int EthernetClass::begin(uint8_t *mac, const char *hostname = nullptr, unsigned long timeout = 60000, unsigned long responseTimeout = 4000, ProcessEventsCallback eventsCallback = nullptr)
+int EthernetClass::begin(uint8_t *mac, const char *hostname, unsigned long timeout, unsigned long responseTimeout, ProcessEventsCallback eventsCallback)
 {
   static DhcpClass s_dhcp;
   _dhcp = &s_dhcp;
@@ -155,11 +155,11 @@ int EthernetClass::maintain()
     switch (rc)
     {
     case DHCP_CHECK_NONE:
-      //nothing done
+      // nothing done
       break;
     case DHCP_CHECK_RENEW_OK:
     case DHCP_CHECK_REBIND_OK:
-      //we might have got a new IP.
+      // we might have got a new IP.
       SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
       W5100.setIPAddress(_dhcp->getLocalIp().raw_address());
       W5100.setGatewayIp(_dhcp->getGatewayIp().raw_address());
@@ -168,7 +168,7 @@ int EthernetClass::maintain()
       _dnsServerAddress = _dhcp->getDnsServerIp();
       break;
     default:
-      //this is actually an error, it will retry though
+      // this is actually an error, it will retry though
       break;
     }
   }

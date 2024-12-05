@@ -8,7 +8,11 @@
 #include "Ethernet.h"
 #include "Dns.h"
 #include "utility/w5100.h"
+#ifndef STM32BUILD
 #include <avr/wdt.h>
+#else
+#include <IWatchdog.h>
+#endif
 
 #define SOCKET_NONE 255
 // Various flags and header field values for a DNS message
@@ -244,13 +248,18 @@ uint16_t DNSClient::ProcessResponse(uint16_t aTimeout, IPAddress &aAddress)
     delay(50);
 
     // Reset hardware watchdog to prevent box resets during long DHCP handshakes
+#ifndef STM32BUILD
     wdt_reset();
+#else
+    IWatchdog.reload();
+#endif
   }
 
   // We've had a reply!
   // Read the UDP header
-  //uint8_t header[DNS_HEADER_SIZE]; // Enough space to reuse for the DNS header
-  union {
+  // uint8_t header[DNS_HEADER_SIZE]; // Enough space to reuse for the DNS header
+  union
+  {
     uint8_t byte[DNS_HEADER_SIZE]; // Enough space to reuse for the DNS header
     uint16_t word[DNS_HEADER_SIZE / 2];
   } header;
@@ -284,7 +293,7 @@ uint16_t DNSClient::ProcessResponse(uint16_t aTimeout, IPAddress &aAddress)
   {
     // Mark the entire packet as read
     iUdp.flush(); // FIXME
-    return -5;    //INVALID_RESPONSE;
+    return -5;    // INVALID_RESPONSE;
   }
 
   // And make sure we've got (at least) one answer
@@ -293,7 +302,7 @@ uint16_t DNSClient::ProcessResponse(uint16_t aTimeout, IPAddress &aAddress)
   {
     // Mark the entire packet as read
     iUdp.flush(); // FIXME
-    return -6;    //INVALID_RESPONSE;
+    return -6;    // INVALID_RESPONSE;
   }
 
   // Skip over any questions
@@ -374,7 +383,7 @@ uint16_t DNSClient::ProcessResponse(uint16_t aTimeout, IPAddress &aAddress)
         // It's a weird size
         // Mark the entire packet as read
         iUdp.flush(); // FIXME
-        return -9;    //INVALID_RESPONSE;
+        return -9;    // INVALID_RESPONSE;
       }
       // FIXME: seeems to lock up here on ESP8266, but why??
       iUdp.read(aAddress.raw_address(), 4);
@@ -391,7 +400,7 @@ uint16_t DNSClient::ProcessResponse(uint16_t aTimeout, IPAddress &aAddress)
   iUdp.flush(); // FIXME
 
   // If we get here then we haven't found an answer
-  return -10; //INVALID_RESPONSE;
+  return -10; // INVALID_RESPONSE;
 }
 
 #endif
